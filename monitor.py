@@ -2,7 +2,11 @@ import os
 import requests
 import time
 from tqdm import tqdm
+from multiprocessing import Pool
+from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor
 import subprocess
+import sys
 
 def get_org_public_repos(org_name):
     #GET ORG public repos
@@ -46,29 +50,53 @@ def get_org_members(org_name):
         page_num += 1
     return members
 
+def get_repos_for_member(member, headers):
+    api_url = f"https://api.github.com/users/{member}/repos?type=owner"
+    page_number = 1
+    repos = []
+    while True:
+        params = {"type": "owner", "per_page": 100, "page": page_number}
+        response = requests.get(api_url, headers=headers, params=params)
+        if response.status_code == 403 and 'X-RateLimit-Remaining' in response.headers and int(response.headers['X-RateLimit-Remaining']) == 0:
+            raise Exception("GitHub rate limit exceeded")
+        repos_data = response.json()
+        if not repos_data:
+            break
+        repos.extend([repo["html_url"] for repo in repos_data])
+        page_number += 1
+    return repos
 def get_members_repos(org_name, retrieved_members=set()):
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"Bearer {os.getenv('GITHUB_PAT')}",
     }
+    # retrieved_members = set()
     members = get_org_members(org_name)
     repositories = []
-    for member in members:
-        if member in retrieved_members:
-            print("Skipping member since already scanned"+member)
-            continue
-        api_url = f"https://api.github.com/users/{member}/repos?type=owner"
-        page_number = 1
-        print("Scanning User: "+member)
-        while True:
-            params = {"type": "owner", "per_page": 100, "page": page_number}
-            response = requests.get(api_url, headers=headers, params=params)
-            repos = response.json()
-            if not repos:
-                break
-            repositories.extend([repo["html_url"] for repo in repos])
-            page_number += 1
-        retrieved_members.add(member)
+    with Pool(processes=4) as pool:
+        results = []
+        for member in members:
+            if member in retrieved_members:
+                print(f"Skipping member {member} since already scanned")
+                continue
+            print(f"Scanning User: {member}")
+            try:
+                results.append(pool.apply_async(get_repos_for_member, args=(member, headers)))
+                retrieved_members.add(member)
+                if len(results) == 4:
+                    for res in results:
+                        try:
+                            repositories.extend(res.get())
+                        except Exception as ex:
+                            print(f"Exception in get_repos_for_member: {ex}")
+                    results.clear()
+            except Exception as ex:
+                print(f"Exception in get_members_repos: {ex}")
+        for res in results:
+            try:
+                repositories.extend(res.get())
+            except Exception as ex:
+                print(f"Exception in get_repos_for_member: {ex}")
     return repositories, retrieved_members
 
 def write_to_file(filename, items):
