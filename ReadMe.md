@@ -1,7 +1,7 @@
 # GitHub Public Repository Scanner
 
-This tool scans New public repositories of Organization members and Organizations. 
-It retrieves the repos and basically diffs with previous results, these new result are pushed to a secret scanner to scan for secrets and alert the webhooks from notify.
+This tool scans New public repositories of Organization members and Organizations for secrets in almost real time(8 mins, any more and github might rate limit, it's also based on number of members)
+It retrieves the repos and basically diffs with previous results, these new result are pushed to a secret scanner to scan for secrets and alert the webhooks from notify. 
 
 ## Usage
 
