@@ -1,0 +1,1 @@
+# A script to be invoked by python later to run secret scan on newly detected repos
