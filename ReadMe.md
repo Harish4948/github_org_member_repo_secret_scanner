@@ -1,7 +1,7 @@
 # GitHub Public Repository Scanner
 
-This tool scans New public repositories of Organization members and Organizations for secrets in almost real time(8 mins, any more and github might rate limit, it's also based on number of members)
-It retrieves the repos and basically diffs with previous results, these new result are pushed to a secret scanner to scan for secrets and alert the webhooks from notify. 
+This tool scans New public repositories of Organization members and Organizations for secrets in almost real time(8 mins)
+It retrieves the repos and basically diffs with previous results, these new result are pushed to a secret scanner to scan for secrets and alert the webhooks from notify. The prob with most free/open source solutions is that it takes a long time to scan and hard to scan just the new repos for secrets.
 
 ## Usage
 
@@ -17,3 +17,6 @@ It retrieves the repos and basically diffs with previous results, these new resu
 -  Trufflehog
 -  Notify from project discovery
 
+# Future Plan
+- Implement Monitoring User public repos for new changes and scan them
+- Clean up the bash script to better arrange the output and filenames
