@@ -7,7 +7,7 @@ It retrieves the repos and basically diffs with previous results, these new resu
 
 1. Set the `GITHUB_PAT` environment variable to a [GitHub Personal Access Token]
 2. Modify the `org_names` list in `main` function with the names of the organizations you want to scan.
-3. Run the script with `python scanner.py`.
+3. Run the script with `python monitor.py`.
 
 ## Requirements
 
